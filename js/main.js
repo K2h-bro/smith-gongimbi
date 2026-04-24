@@ -93,26 +93,28 @@
   async function init() {
     showLoading();
 
-    // 캐시 우선 즉시 렌더
-    const cached = localStorage.getItem('smith_data');
-    if (cached) {
-      const cachedData = JSON.parse(cached);
-      window.__smithData = cachedData;
-      renderAll(cachedData);
-    }
-
-    // API에서 최신 데이터 가져오기
+    // API에서 최신 데이터 우선 로드
     const apiData = await apiLoad();
     if (apiData) {
       window.__smithData = apiData;
       localStorage.setItem('smith_data', JSON.stringify(apiData));
       renderAll(apiData);
-    } else if (!cached) {
-      // API 실패 + 캐시도 없으면 기본값 사용
-      const fallback = JSON.parse(JSON.stringify(DEFAULT_DATA));
-      window.__smithData = fallback;
-      renderAll(fallback);
+      return;
     }
+
+    // API 실패 시 캐시 사용
+    const cached = localStorage.getItem('smith_data');
+    if (cached) {
+      const cachedData = JSON.parse(cached);
+      window.__smithData = cachedData;
+      renderAll(cachedData);
+      return;
+    }
+
+    // 캐시도 없으면 기본값 사용
+    const fallback = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    window.__smithData = fallback;
+    renderAll(fallback);
   }
 
   init();
