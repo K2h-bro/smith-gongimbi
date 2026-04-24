@@ -11,16 +11,19 @@ async function apiLoad() {
   }
 }
 
-async function apiSave(data) {
-  try {
-    const json = encodeURIComponent(JSON.stringify(data));
-    // no-cors: 응답을 읽지 않고 전송만 (CORS 우회)
-    await fetch(`${SMITH_API}?action=save&d=${json}&t=${Date.now()}`, {
-      mode: 'no-cors'
-    });
-    return true;
-  } catch (e) {
-    console.error('API 저장 실패:', e);
-    return false;
-  }
+function apiSave(data) {
+  return new Promise((resolve) => {
+    try {
+      const json = encodeURIComponent(JSON.stringify(data));
+      const img = new Image();
+      // 이미지 태그는 CORS·리다이렉트 제약 없이 GET 요청을 보냄
+      // Apps Script가 doGet을 실행한 후 JSON을 반환 → 이미지 로드 실패(onerror)하지만 저장은 완료됨
+      img.onload = img.onerror = () => resolve(true);
+      img.src = `${SMITH_API}?action=save&d=${json}&t=${Date.now()}`;
+      setTimeout(() => resolve(true), 8000);
+    } catch (e) {
+      console.error('API 저장 실패:', e);
+      resolve(false);
+    }
+  });
 }
