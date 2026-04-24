@@ -1,5 +1,5 @@
 (function () {
-  const PASS = 'smith2024';
+  const PASS = 'smith2121';
 
   /* ── AUTH ── */
   const loginScreen = document.getElementById('login-screen');
@@ -61,7 +61,7 @@
     showToast('초기화 완료');
   });
   document.getElementById('preview-btn').addEventListener('click', () => {
-    window.open('index.html', '_blank');
+    window.open('../index.html', '_blank');
   });
 
   /* ── RENDER ── */
