@@ -13,8 +13,10 @@ async function apiLoad() {
 
 async function apiSave(data) {
   try {
+    // no-cors: CORS preflight 없이 전송 (Apps Script 수신 가능)
     await fetch(SMITH_API, {
       method: 'POST',
+      mode: 'no-cors',
       body: JSON.stringify(data)
     });
     return true;
