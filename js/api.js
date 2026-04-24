@@ -13,13 +13,10 @@ async function apiLoad() {
 
 async function apiSave(data) {
   try {
-    // no-cors: CORS preflight 없이 전송 (Apps Script 수신 가능)
-    await fetch(SMITH_API, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify(data)
-    });
-    return true;
+    const json = encodeURIComponent(JSON.stringify(data));
+    const res = await fetch(`${SMITH_API}?action=save&d=${json}&t=${Date.now()}`);
+    const result = await res.json();
+    return result.ok === true;
   } catch (e) {
     console.error('API 저장 실패:', e);
     return false;
