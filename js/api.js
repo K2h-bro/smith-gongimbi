@@ -14,9 +14,11 @@ async function apiLoad() {
 async function apiSave(data) {
   try {
     const json = encodeURIComponent(JSON.stringify(data));
-    const res = await fetch(`${SMITH_API}?action=save&d=${json}&t=${Date.now()}`);
-    const result = await res.json();
-    return result.ok === true;
+    // no-cors: 응답을 읽지 않고 전송만 (CORS 우회)
+    await fetch(`${SMITH_API}?action=save&d=${json}&t=${Date.now()}`, {
+      mode: 'no-cors'
+    });
+    return true;
   } catch (e) {
     console.error('API 저장 실패:', e);
     return false;
