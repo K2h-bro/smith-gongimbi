@@ -80,8 +80,10 @@ html, body {
   gap: 16px;
 }
 .smith-logo-svg { width: 38px; height: 38px; flex-shrink: 0; }
-.smith-logo-img { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
-.footer-logo-img { width: 28px; height: 28px; object-fit: contain; }
+/* 헤더 — 흰색 로고 (가로형), 다크 배경 */
+.smith-logo-img { height: 36px; width: auto; object-fit: contain; flex-shrink: 0; }
+/* 푸터 — 아이콘만, 흰 배경이므로 배경 블렌드 처리 */
+.footer-logo-img { width: 30px; height: 30px; object-fit: contain; mix-blend-mode: screen; }
 .brand-title {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-weight: 700;
