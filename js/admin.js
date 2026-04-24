@@ -1,40 +1,7 @@
 (function () {
   const PASS = 'smith2121';
 
-  /* ── AUTH ── */
-  const loginScreen = document.getElementById('login-screen');
-  const adminWrap   = document.getElementById('admin-wrap');
-  const passInput   = document.getElementById('pass-input');
-  const loginErr    = document.getElementById('login-error');
-
-  function unlock() {
-    loginScreen.style.display = 'none';
-    adminWrap.classList.add('visible');
-    renderAll();
-    updateSavedTime();
-  }
-
-  if (sessionStorage.getItem('smith_auth') === '1') { unlock(); }
-
-  document.getElementById('login-btn').addEventListener('click', () => {
-    if (passInput.value === PASS) {
-      sessionStorage.setItem('smith_auth', '1');
-      loginErr.textContent = '';
-      unlock();
-    } else {
-      loginErr.textContent = '비밀번호가 올바르지 않습니다.';
-      passInput.value = '';
-      passInput.focus();
-    }
-  });
-  passInput.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
-
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    sessionStorage.removeItem('smith_auth');
-    location.reload();
-  });
-
-  /* ── DATA ── */
+  /* ── DATA (반드시 최상단에 위치) ── */
   let data = loadData();
 
   /* ── 히스토리 (Ctrl+Z) ── */
@@ -102,6 +69,43 @@
     showToast('저장 완료 ✓');
   }
 
+  /* ── AUTH ── */
+  const loginScreen = document.getElementById('login-screen');
+  const adminWrap   = document.getElementById('admin-wrap');
+  const passInput   = document.getElementById('pass-input');
+  const loginErr    = document.getElementById('login-error');
+
+  function unlock() {
+    loginScreen.style.display = 'none';
+    adminWrap.classList.add('visible');
+    renderAll();
+    updateSavedTime();
+    updateUndoBtn();
+  }
+
+  /* 세션 유지 시 자동 로그인 */
+  if (sessionStorage.getItem('smith_auth') === '1') { unlock(); }
+
+  document.getElementById('login-btn').addEventListener('click', () => {
+    if (passInput.value === PASS) {
+      sessionStorage.setItem('smith_auth', '1');
+      loginErr.textContent = '';
+      unlock();
+    } else {
+      loginErr.textContent = '비밀번호가 올바르지 않습니다.';
+      passInput.value = '';
+      passInput.focus();
+    }
+  });
+  passInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    sessionStorage.removeItem('smith_auth');
+    location.reload();
+  });
+
   document.getElementById('save-btn').addEventListener('click', saveAll);
 
   document.getElementById('reset-btn').addEventListener('click', () => {
@@ -137,9 +141,8 @@
         ]);
       });
     });
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const bom = '﻿'; // 한글 깨짐 방지
-    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -177,9 +180,6 @@
   const cols = ['juniper', 'highland', 'threey', 'sx'];
   const colLabels = ['주니퍼', '하이랜드', '3 / Y', 'S / X'];
 
-  /* ════════════════════════════
-     카테고리 렌더링 + 드래그
-  ════════════════════════════ */
   function renderCategories() {
     const container = document.getElementById('categories-container');
     container.innerHTML = '';
@@ -287,22 +287,18 @@
       container.appendChild(block);
     });
 
-    /* 카테고리 드래그 */
     setupCatDrag(container);
-
-    /* 각 카테고리 내 항목 드래그 */
     container.querySelectorAll('.items-tbody').forEach((tbody, ci) => {
       setupItemDrag(tbody, ci);
     });
   }
 
-  /* ── 카테고리 드래그 앤 드롭 ── */
+  /* ── 카테고리 드래그 ── */
   function setupCatDrag(container) {
     let dragSrc = null;
 
     container.querySelectorAll('.cat-block').forEach(block => {
       block.addEventListener('dragstart', e => {
-        // 입력 필드나 버튼은 드래그 무시
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' ||
             e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
           e.preventDefault(); return;
@@ -336,7 +332,7 @@
     });
   }
 
-  /* ── 항목 드래그 앤 드롭 ── */
+  /* ── 항목 드래그 ── */
   function setupItemDrag(tbody, ci) {
     let dragRow = null;
 
