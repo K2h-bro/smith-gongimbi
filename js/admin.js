@@ -62,11 +62,19 @@
   }
 
   /* ── SAVE ── */
-  function saveAll() {
+  async function saveAll() {
     collectData();
-    saveData(data);
-    stampSavedTime();
-    showToast('저장 완료 ✓');
+    const btn = document.getElementById('save-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
+    const ok = await apiSave(data);
+    if (ok) {
+      localStorage.setItem('smith_data', JSON.stringify(data));
+      stampSavedTime();
+      showToast('저장 완료 ✓');
+    } else {
+      showToast('저장 실패 — 네트워크 확인', true);
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '저장 · 적용'; }
   }
 
   /* ── AUTH & 이벤트 초기화 (DOM 준비 후 실행) ── */
@@ -76,9 +84,28 @@
     const passInput   = document.getElementById('pass-input');
     const loginErr    = document.getElementById('login-error');
 
-    function unlock() {
+    async function unlock() {
       loginScreen.style.display = 'none';
       adminWrap.classList.add('visible');
+
+      // 로딩 표시
+      const container = document.getElementById('categories-container');
+      container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:12px;">데이터 불러오는 중…</div>';
+
+      // API에서 최신 데이터 로드
+      const apiData = await apiLoad();
+      if (apiData) {
+        data = apiData;
+        localStorage.setItem('smith_data', JSON.stringify(data));
+      } else {
+        // 첫 실행 시 DEFAULT_DATA를 API에 초기화
+        const hasSheet = localStorage.getItem('smith_api_init');
+        if (!hasSheet) {
+          await apiSave(data);
+          localStorage.setItem('smith_api_init', '1');
+        }
+      }
+
       renderAll();
       updateSavedTime();
       updateUndoBtn();

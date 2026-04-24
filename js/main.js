@@ -1,20 +1,31 @@
 (function () {
-  const data = loadData();
-  const priceContent = document.getElementById('price-content');
   const romans = ['i','ii','iii','iv','v','vi','vii','viii','ix','x'];
   const carLabels = { juniper: '주니퍼', highland: '하이랜드', threey: '3 · Y', sx: 'S · X' };
-
   let selectedCar = 'juniper';
 
-  /* ── 차종별 공임비 렌더링 ── */
-  function renderPriceContent(carKey) {
+  /* ── 로딩 상태 ── */
+  function showLoading() {
+    document.getElementById('price-content').innerHTML = `
+      <div style="text-align:center;padding:60px 0;color:var(--text-muted);">
+        <div class="spinner"></div>
+        <div style="margin-top:14px;font-size:12px;letter-spacing:1px;">데이터 불러오는 중…</div>
+      </div>`;
+  }
+
+  /* ── 렌더링 ── */
+  function renderAll(data) {
+    renderPriceContent(data, selectedCar);
+    renderAdditional(data);
+    renderNotes(data);
+  }
+
+  function renderPriceContent(data, carKey) {
+    const el = document.getElementById('price-content');
     let html = `<span class="car-badge">${carLabels[carKey]}</span>`;
 
     data.categories.forEach(cat => {
-      const visibleItems = cat.items.filter(item =>
-        item.type === 'consult' || item[carKey] !== null
-      );
-      if (visibleItems.length === 0) return;
+      const visible = cat.items.filter(i => i.type === 'consult' || i[carKey] !== null);
+      if (!visible.length) return;
 
       html += `
         <div class="price-category">
@@ -22,35 +33,49 @@
             ${cat.name}<span class="cat-en">${cat.nameEn}</span>
           </div>
           <div class="price-list">
-            ${visibleItems.map(item => renderItem(item, carKey)).join('')}
+            ${visible.map(item => renderItem(item, carKey)).join('')}
           </div>
         </div>`;
     });
 
-    priceContent.innerHTML = html;
+    el.innerHTML = html;
   }
 
   function renderItem(item, carKey) {
     if (item.type === 'consult') {
-      return `
-        <div class="price-item is-consult">
-          <span class="item-name">${item.name}</span>
-          <span class="consult-label">상담 및 채팅 문의</span>
-        </div>`;
+      return `<div class="price-item is-consult">
+        <span class="item-name">${item.name}</span>
+        <span class="consult-label">상담 및 채팅 문의</span>
+      </div>`;
     }
-
     const cls = item.type === 'set' ? 'price-item is-set' : 'price-item';
     const sub = item.sub ? `<div class="item-sub">${item.sub}</div>` : '';
-    const price = item[carKey];
+    return `<div class="${cls}">
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>${sub}
+      </div>
+      <div class="item-price">${item[carKey]}<span class="unit">만원</span></div>
+    </div>`;
+  }
 
-    return `
-      <div class="${cls}">
-        <div class="item-info">
-          <div class="item-name">${item.name}</div>
-          ${sub}
-        </div>
-        <div class="item-price">${price}<span class="unit">만원</span></div>
-      </div>`;
+  function renderAdditional(data) {
+    document.getElementById('addl-tags').innerHTML =
+      data.additionalServices.map(s => `<span class="addl-tag">${s}</span>`).join('');
+  }
+
+  function renderNotes(data) {
+    const el = document.getElementById('notes-section');
+    const half = Math.ceil(data.notes.length / 2);
+    function col(notes, start) {
+      return notes.map((n, i) => `
+        <div class="note-item">
+          <span class="note-num">${romans[start + i]}.</span>
+          <span class="note-text">${n}</span>
+        </div>`).join('');
+    }
+    el.innerHTML = `
+      <div class="notes-col">${col(data.notes.slice(0, half), 0)}</div>
+      <div class="notes-col">${col(data.notes.slice(half), half)}</div>`;
   }
 
   /* ── 탭 이벤트 ── */
@@ -59,40 +84,36 @@
       document.querySelectorAll('.car-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       selectedCar = tab.dataset.car;
-      renderPriceContent(selectedCar);
+      const cached = window.__smithData;
+      if (cached) renderPriceContent(cached, selectedCar);
     });
   });
 
-  /* ── 추가 서비스 ── */
-  function renderAdditional() {
-    const el = document.getElementById('addl-tags');
-    el.innerHTML = data.additionalServices
-      .map(s => `<span class="addl-tag">${s}</span>`)
-      .join('');
-  }
+  /* ── 초기 로드 ── */
+  async function init() {
+    showLoading();
 
-  /* ── 안내 사항 ── */
-  function renderNotes() {
-    const el = document.getElementById('notes-section');
-    const half = Math.ceil(data.notes.length / 2);
-    const col1 = data.notes.slice(0, half);
-    const col2 = data.notes.slice(half);
-
-    function col(notes, start) {
-      return notes.map((n, i) => `
-        <div class="note-item">
-          <span class="note-num">${romans[start + i]}.</span>
-          <span class="note-text">${n}</span>
-        </div>`).join('');
+    // 캐시 우선 즉시 렌더
+    const cached = localStorage.getItem('smith_data');
+    if (cached) {
+      const cachedData = JSON.parse(cached);
+      window.__smithData = cachedData;
+      renderAll(cachedData);
     }
 
-    el.innerHTML = `
-      <div class="notes-col">${col(col1, 0)}</div>
-      <div class="notes-col">${col(col2, half)}</div>`;
+    // API에서 최신 데이터 가져오기
+    const apiData = await apiLoad();
+    if (apiData) {
+      window.__smithData = apiData;
+      localStorage.setItem('smith_data', JSON.stringify(apiData));
+      renderAll(apiData);
+    } else if (!cached) {
+      // API 실패 + 캐시도 없으면 기본값 사용
+      const fallback = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      window.__smithData = fallback;
+      renderAll(fallback);
+    }
   }
 
-  /* ── 초기 실행 ── */
-  renderPriceContent(selectedCar);
-  renderAdditional();
-  renderNotes();
+  init();
 })();
