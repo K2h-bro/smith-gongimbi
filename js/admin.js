@@ -11,6 +11,7 @@
     loginScreen.style.display = 'none';
     adminWrap.classList.add('visible');
     renderAll();
+    updateSavedTime();
   }
 
   if (sessionStorage.getItem('smith_auth') === '1') { unlock(); }
@@ -45,10 +46,27 @@
     setTimeout(() => toast.classList.remove('show'), 2400);
   }
 
+  /* ── 저장 시간 표시 ── */
+  function updateSavedTime() {
+    const el = document.getElementById('saved-time');
+    if (!el) return;
+    const ts = localStorage.getItem('smith_saved_at');
+    el.textContent = ts ? '마지막 저장: ' + ts : '저장 기록 없음';
+  }
+
+  function stampSavedTime() {
+    const now = new Date();
+    const str = now.toLocaleDateString('ko-KR') + ' ' +
+      now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    localStorage.setItem('smith_saved_at', str);
+    updateSavedTime();
+  }
+
   /* ── SAVE ── */
   function saveAll() {
     collectData();
     saveData(data);
+    stampSavedTime();
     showToast('저장 완료 ✓');
   }
 
@@ -57,8 +75,10 @@
   document.getElementById('reset-btn').addEventListener('click', () => {
     if (!confirm('모든 데이터를 초기값으로 되돌리겠습니까?')) return;
     resetData();
+    localStorage.removeItem('smith_saved_at');
     data = loadData();
     renderAll();
+    updateSavedTime();
     showToast('초기화 완료');
   });
 
@@ -67,7 +87,36 @@
     window.open('../index.html', '_blank');
   });
 
-  /* 카테고리 추가 버튼 */
+  /* ── CSV 내보내기 ── */
+  document.getElementById('export-btn').addEventListener('click', () => {
+    collectData();
+    const rows = [['카테고리', '작업명', '부가설명', '주니퍼', '하이랜드', '3/Y', 'S/X']];
+    data.categories.forEach(cat => {
+      cat.items.forEach(item => {
+        rows.push([
+          cat.name.replace(/\s+/g, ''),
+          item.name,
+          item.sub || '',
+          item.juniper ?? '',
+          item.highland ?? '',
+          item.threey ?? '',
+          item.sx ?? ''
+        ]);
+      });
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const bom = '﻿'; // 한글 깨짐 방지
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'smith_gongimbi_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV 다운로드 완료');
+  });
+
+  /* ── 카테고리 추가 ── */
   document.getElementById('add-cat-btn').addEventListener('click', () => {
     collectData();
     data.categories.push({
@@ -78,10 +127,9 @@
     });
     renderAll();
     showToast('카테고리 추가됨');
-    // 스크롤 맨 아래로
     setTimeout(() => {
-      const container = document.getElementById('categories-container');
-      container.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('categories-container').lastElementChild
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   });
 
@@ -95,6 +143,9 @@
   const cols = ['juniper', 'highland', 'threey', 'sx'];
   const colLabels = ['주니퍼', '하이랜드', '3 / Y', 'S / X'];
 
+  /* ════════════════════════════
+     카테고리 렌더링 + 드래그
+  ════════════════════════════ */
   function renderCategories() {
     const container = document.getElementById('categories-container');
     container.innerHTML = '';
@@ -103,12 +154,14 @@
       const block = document.createElement('div');
       block.className = 'cat-block';
       block.dataset.catIdx = ci;
+      block.draggable = true;
 
       let itemsHtml = '';
       cat.items.forEach((item, ii) => {
         if (item.type === 'consult') {
           itemsHtml += `
-            <tr data-item-idx="${ii}">
+            <tr data-item-idx="${ii}" draggable="true" class="draggable-row">
+              <td class="drag-handle" title="드래그하여 순서 변경">⠿</td>
               <td><span class="type-badge type-consult">상담</span></td>
               <td><input type="text" class="f-name" value="${esc(item.name)}" placeholder="항목명"></td>
               <td colspan="4" style="text-align:center;color:var(--muted);font-size:11px;">상담 및 채팅 문의 (고정)</td>
@@ -116,17 +169,18 @@
             </tr>`;
         } else {
           itemsHtml += `
-            <tr data-item-idx="${ii}">
+            <tr data-item-idx="${ii}" draggable="true" class="draggable-row">
+              <td class="drag-handle" title="드래그하여 순서 변경">⠿</td>
               <td>
                 <select class="f-type" style="background:var(--input-bg);border:1px solid #333;color:var(--text);font-family:inherit;font-size:10px;padding:4px 6px;outline:none;border-radius:2px;">
-                  <option value="normal" ${item.type==='normal'?'selected':''}>일반</option>
-                  <option value="set"    ${item.type==='set'   ?'selected':''}>셋트</option>
+                  <option value="normal"  ${item.type==='normal' ?'selected':''}>일반</option>
+                  <option value="set"     ${item.type==='set'    ?'selected':''}>셋트</option>
                   <option value="consult" ${item.type==='consult'?'selected':''}>상담</option>
                 </select>
               </td>
               <td>
-                <input type="text" class="f-name" value="${esc(item.name)}" placeholder="항목명" style="min-width:140px;">
-                <input type="text" class="f-sub" value="${esc(item.sub||'')}" placeholder="[부가 설명]" style="margin-top:4px;font-size:10px;color:var(--text-dim);">
+                <input type="text" class="f-name" value="${esc(item.name)}" placeholder="항목명" style="min-width:130px;">
+                <input type="text" class="f-sub"  value="${esc(item.sub||'')}" placeholder="[부가 설명]" style="margin-top:4px;font-size:10px;color:var(--text-dim);">
               </td>
               ${cols.map(c => `<td class="center"><input type="number" class="f-${c}" value="${item[c]??''}" placeholder="—" min="0" max="999"></td>`).join('')}
               <td class="center"><button class="btn btn-danger btn-sm del-item-btn">삭제</button></td>
@@ -137,6 +191,7 @@
       block.innerHTML = `
         <div class="cat-block-head">
           <span class="cat-block-name">
+            <span class="cat-drag-handle" title="드래그하여 카테고리 순서 변경">⠿⠿</span>
             <input type="text" class="cat-name-input" value="${esc(cat.name)}"
               style="background:transparent;border:none;border-bottom:1px solid var(--border);color:#fff;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:1.5px;padding:2px 4px;width:150px;outline:none;">
             <input type="text" class="cat-en-input" value="${esc(cat.nameEn)}"
@@ -144,30 +199,28 @@
           </span>
           <div style="display:flex;gap:8px;align-items:center;">
             <button class="btn btn-outline btn-sm add-item-btn">+ 항목 추가</button>
-            <button class="btn btn-danger btn-sm del-cat-btn" title="카테고리 삭제">카테고리 삭제</button>
+            <button class="btn btn-danger btn-sm del-cat-btn">카테고리 삭제</button>
           </div>
         </div>
         <table class="items-table">
           <thead>
             <tr>
+              <th style="width:28px;"></th>
               <th style="width:72px;">타입</th>
               <th>작업명 / 설명</th>
               ${colLabels.map(l => `<th class="center" style="width:68px;">${l}</th>`).join('')}
               <th style="width:60px;"></th>
             </tr>
           </thead>
-          <tbody class="items-tbody">${itemsHtml || `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:14px;font-size:11px;">항목 없음 — 위의 "+ 항목 추가" 버튼으로 추가하세요</td></tr>`}</tbody>
+          <tbody class="items-tbody">${itemsHtml || `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:14px;font-size:11px;">항목 없음 — "+ 항목 추가" 버튼으로 추가하세요</td></tr>`}</tbody>
         </table>`;
 
       /* 항목 추가 */
       block.querySelector('.add-item-btn').addEventListener('click', () => {
         collectData();
         data.categories[ci].items.push({
-          id: 'item_' + Date.now(),
-          name: '새 항목',
-          sub: '',
-          juniper: null, highland: null, threey: null, sx: null,
-          type: 'normal'
+          id: 'item_' + Date.now(), name: '새 항목', sub: '',
+          juniper: null, highland: null, threey: null, sx: null, type: 'normal'
         });
         renderAll();
       });
@@ -179,14 +232,14 @@
         collectData();
         data.categories.splice(ci, 1);
         renderAll();
-        showToast(`"${catName}" 삭제됨`, false);
+        showToast(`"${catName}" 삭제됨`);
       });
 
       /* 항목 삭제 */
       block.querySelectorAll('.del-item-btn').forEach(btn => {
         btn.addEventListener('click', function () {
           const ii = +this.closest('tr').dataset.itemIdx;
-          if (ii === undefined || isNaN(ii)) return;
+          if (isNaN(ii)) return;
           if (!confirm('이 항목을 삭제하겠습니까?')) return;
           collectData();
           data.categories[ci].items.splice(ii, 1);
@@ -195,6 +248,91 @@
       });
 
       container.appendChild(block);
+    });
+
+    /* 카테고리 드래그 */
+    setupCatDrag(container);
+
+    /* 각 카테고리 내 항목 드래그 */
+    container.querySelectorAll('.items-tbody').forEach((tbody, ci) => {
+      setupItemDrag(tbody, ci);
+    });
+  }
+
+  /* ── 카테고리 드래그 앤 드롭 ── */
+  function setupCatDrag(container) {
+    let dragSrc = null;
+
+    container.querySelectorAll('.cat-block').forEach(block => {
+      block.addEventListener('dragstart', e => {
+        // 입력 필드나 버튼은 드래그 무시
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' ||
+            e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+          e.preventDefault(); return;
+        }
+        dragSrc = block;
+        block.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      block.addEventListener('dragend', () => {
+        block.classList.remove('dragging');
+        container.querySelectorAll('.cat-block').forEach(b => b.classList.remove('drag-over'));
+      });
+      block.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (block === dragSrc) return;
+        container.querySelectorAll('.cat-block').forEach(b => b.classList.remove('drag-over'));
+        block.classList.add('drag-over');
+      });
+      block.addEventListener('drop', e => {
+        e.preventDefault();
+        if (!dragSrc || dragSrc === block) return;
+        collectData();
+        const fromIdx = +dragSrc.dataset.catIdx;
+        const toIdx   = +block.dataset.catIdx;
+        const moved = data.categories.splice(fromIdx, 1)[0];
+        data.categories.splice(toIdx, 0, moved);
+        renderAll();
+        showToast('순서 변경됨');
+      });
+    });
+  }
+
+  /* ── 항목 드래그 앤 드롭 ── */
+  function setupItemDrag(tbody, ci) {
+    let dragRow = null;
+
+    tbody.querySelectorAll('.draggable-row').forEach(row => {
+      row.addEventListener('dragstart', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' ||
+            e.target.tagName === 'SELECT') {
+          e.preventDefault(); return;
+        }
+        dragRow = row;
+        row.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        tbody.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over'));
+      });
+      row.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (row === dragRow) return;
+        tbody.querySelectorAll('tr').forEach(r => r.classList.remove('drag-over'));
+        row.classList.add('drag-over');
+      });
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        if (!dragRow || dragRow === row) return;
+        collectData();
+        const fromIdx = +dragRow.dataset.itemIdx;
+        const toIdx   = +row.dataset.itemIdx;
+        if (isNaN(fromIdx) || isNaN(toIdx)) return;
+        const moved = data.categories[ci].items.splice(fromIdx, 1)[0];
+        data.categories[ci].items.splice(toIdx, 0, moved);
+        renderAll();
+      });
     });
   }
 
@@ -218,8 +356,8 @@
         if (!item) return;
         const nameEl = row.querySelector('.f-name');
         if (nameEl) item.name = nameEl.value.trim();
-        const subEl = row.querySelector('.f-sub');
-        if (subEl) item.sub = subEl.value.trim();
+        const subEl  = row.querySelector('.f-sub');
+        if (subEl)  item.sub  = subEl.value.trim();
         const typeEl = row.querySelector('.f-type');
         if (typeEl) item.type = typeEl.value;
         cols.forEach(c => {
@@ -231,7 +369,6 @@
 
     data.additionalServices = document.getElementById('addl-editor').value
       .split('\n').map(s => s.trim()).filter(Boolean);
-
     data.notes = document.getElementById('notes-editor').value
       .split('\n').map(s => s.trim()).filter(Boolean);
   }
