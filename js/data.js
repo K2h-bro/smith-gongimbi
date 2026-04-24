@@ -121,9 +121,9 @@ const DEFAULT_DATA = {
 function loadData() {
   try {
     const saved = localStorage.getItem('smith_data');
-    return saved ? JSON.parse(saved) : DEFAULT_DATA;
+    return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_DATA));
   } catch {
-    return DEFAULT_DATA;
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
 }
 

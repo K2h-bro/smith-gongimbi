@@ -37,6 +37,38 @@
   /* ── DATA ── */
   let data = loadData();
 
+  /* ── 히스토리 (Ctrl+Z) ── */
+  const history = [];
+  const MAX_HISTORY = 30;
+
+  function pushHistory() {
+    history.push(JSON.stringify(data));
+    if (history.length > MAX_HISTORY) history.shift();
+    updateUndoBtn();
+  }
+
+  function undo() {
+    if (!history.length) return;
+    data = JSON.parse(history.pop());
+    renderAll();
+    updateUndoBtn();
+    showToast('되돌리기 완료');
+  }
+
+  function updateUndoBtn() {
+    const btn = document.getElementById('undo-btn');
+    if (btn) btn.disabled = history.length === 0;
+  }
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' &&
+        !e.target.matches('input, textarea, select')) {
+      e.preventDefault();
+      undo();
+    }
+  });
+  document.getElementById('undo-btn').addEventListener('click', undo);
+
   /* ── TOAST ── */
   const toast = document.getElementById('toast');
   function showToast(msg, isError = false) {
@@ -84,7 +116,8 @@
 
   document.getElementById('preview-btn').addEventListener('click', () => {
     saveAll();
-    window.open('../index.html', '_blank');
+    const base = window.location.href.split('/admin')[0];
+    window.open(base + '/', '_blank');
   });
 
   /* ── CSV 내보내기 ── */
@@ -119,6 +152,7 @@
   /* ── 카테고리 추가 ── */
   document.getElementById('add-cat-btn').addEventListener('click', () => {
     collectData();
+    pushHistory();
     data.categories.push({
       id: 'cat_' + Date.now(),
       name: '새 카테고리',
@@ -218,6 +252,7 @@
       /* 항목 추가 */
       block.querySelector('.add-item-btn').addEventListener('click', () => {
         collectData();
+        pushHistory();
         data.categories[ci].items.push({
           id: 'item_' + Date.now(), name: '새 항목', sub: '',
           juniper: null, highland: null, threey: null, sx: null, type: 'normal'
@@ -230,6 +265,7 @@
         const catName = data.categories[ci].name;
         if (!confirm(`"${catName}" 카테고리 전체를 삭제하겠습니까?\n포함된 항목도 모두 삭제됩니다.`)) return;
         collectData();
+        pushHistory();
         data.categories.splice(ci, 1);
         renderAll();
         showToast(`"${catName}" 삭제됨`);
@@ -242,6 +278,7 @@
           if (isNaN(ii)) return;
           if (!confirm('이 항목을 삭제하겠습니까?')) return;
           collectData();
+          pushHistory();
           data.categories[ci].items.splice(ii, 1);
           renderAll();
         });
@@ -288,6 +325,7 @@
         e.preventDefault();
         if (!dragSrc || dragSrc === block) return;
         collectData();
+        pushHistory();
         const fromIdx = +dragSrc.dataset.catIdx;
         const toIdx   = +block.dataset.catIdx;
         const moved = data.categories.splice(fromIdx, 1)[0];
@@ -326,6 +364,7 @@
         e.preventDefault();
         if (!dragRow || dragRow === row) return;
         collectData();
+        pushHistory();
         const fromIdx = +dragRow.dataset.itemIdx;
         const toIdx   = +row.dataset.itemIdx;
         if (isNaN(fromIdx) || isNaN(toIdx)) return;
