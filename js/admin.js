@@ -34,7 +34,7 @@
       undo();
     }
   });
-  document.getElementById('undo-btn').addEventListener('click', undo);
+  document.getElementById('undo-btn')?.addEventListener('click', undo);
 
   /* ── TOAST ── */
   const toast = document.getElementById('toast');
@@ -69,106 +69,117 @@
     showToast('저장 완료 ✓');
   }
 
-  /* ── AUTH ── */
-  const loginScreen = document.getElementById('login-screen');
-  const adminWrap   = document.getElementById('admin-wrap');
-  const passInput   = document.getElementById('pass-input');
-  const loginErr    = document.getElementById('login-error');
+  /* ── AUTH & 이벤트 초기화 (DOM 준비 후 실행) ── */
+  function init() {
+    const loginScreen = document.getElementById('login-screen');
+    const adminWrap   = document.getElementById('admin-wrap');
+    const passInput   = document.getElementById('pass-input');
+    const loginErr    = document.getElementById('login-error');
 
-  function unlock() {
-    loginScreen.style.display = 'none';
-    adminWrap.classList.add('visible');
-    renderAll();
-    updateSavedTime();
-    updateUndoBtn();
+    function unlock() {
+      loginScreen.style.display = 'none';
+      adminWrap.classList.add('visible');
+      renderAll();
+      updateSavedTime();
+      updateUndoBtn();
+    }
+
+    /* 세션 유지 시 자동 로그인 */
+    if (sessionStorage.getItem('smith_auth') === '1') { unlock(); }
+
+    document.getElementById('login-btn').addEventListener('click', () => {
+      if (passInput.value === PASS) {
+        sessionStorage.setItem('smith_auth', '1');
+        loginErr.textContent = '';
+        unlock();
+      } else {
+        loginErr.textContent = '비밀번호가 올바르지 않습니다.';
+        passInput.value = '';
+        passInput.focus();
+      }
+    });
+    passInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('login-btn').click();
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sessionStorage.removeItem('smith_auth');
+      location.reload();
+    });
+
+    document.getElementById('save-btn').addEventListener('click', saveAll);
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      if (!confirm('모든 데이터를 초기값으로 되돌리겠습니까?')) return;
+      resetData();
+      localStorage.removeItem('smith_saved_at');
+      data = loadData();
+      renderAll();
+      updateSavedTime();
+      showToast('초기화 완료');
+    });
+
+    document.getElementById('preview-btn').addEventListener('click', () => {
+      saveAll();
+      const base = window.location.href.split('/admin')[0];
+      window.open(base + '/', '_blank');
+    });
+
+    document.getElementById('undo-btn').addEventListener('click', undo);
+
+    /* CSV 내보내기 */
+    document.getElementById('export-btn').addEventListener('click', () => {
+      collectData();
+      const rows = [['카테고리', '작업명', '부가설명', '주니퍼', '하이랜드', '3/Y', 'S/X']];
+      data.categories.forEach(cat => {
+        cat.items.forEach(item => {
+          rows.push([
+            cat.name.replace(/\s+/g, ''),
+            item.name,
+            item.sub || '',
+            item.juniper ?? '',
+            item.highland ?? '',
+            item.threey ?? '',
+            item.sx ?? ''
+          ]);
+        });
+      });
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'smith_gongimbi_' + new Date().toISOString().slice(0,10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV 다운로드 완료');
+    });
+
+    /* 카테고리 추가 */
+    document.getElementById('add-cat-btn').addEventListener('click', () => {
+      collectData();
+      pushHistory();
+      data.categories.push({
+        id: 'cat_' + Date.now(),
+        name: '새 카테고리',
+        nameEn: 'New Category',
+        items: []
+      });
+      renderAll();
+      showToast('카테고리 추가됨');
+      setTimeout(() => {
+        document.getElementById('categories-container').lastElementChild
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    });
   }
 
-  /* 세션 유지 시 자동 로그인 */
-  if (sessionStorage.getItem('smith_auth') === '1') { unlock(); }
-
-  document.getElementById('login-btn').addEventListener('click', () => {
-    if (passInput.value === PASS) {
-      sessionStorage.setItem('smith_auth', '1');
-      loginErr.textContent = '';
-      unlock();
-    } else {
-      loginErr.textContent = '비밀번호가 올바르지 않습니다.';
-      passInput.value = '';
-      passInput.focus();
-    }
-  });
-  passInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('login-btn').click();
-  });
-
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    sessionStorage.removeItem('smith_auth');
-    location.reload();
-  });
-
-  document.getElementById('save-btn').addEventListener('click', saveAll);
-
-  document.getElementById('reset-btn').addEventListener('click', () => {
-    if (!confirm('모든 데이터를 초기값으로 되돌리겠습니까?')) return;
-    resetData();
-    localStorage.removeItem('smith_saved_at');
-    data = loadData();
-    renderAll();
-    updateSavedTime();
-    showToast('초기화 완료');
-  });
-
-  document.getElementById('preview-btn').addEventListener('click', () => {
-    saveAll();
-    const base = window.location.href.split('/admin')[0];
-    window.open(base + '/', '_blank');
-  });
-
-  /* ── CSV 내보내기 ── */
-  document.getElementById('export-btn').addEventListener('click', () => {
-    collectData();
-    const rows = [['카테고리', '작업명', '부가설명', '주니퍼', '하이랜드', '3/Y', 'S/X']];
-    data.categories.forEach(cat => {
-      cat.items.forEach(item => {
-        rows.push([
-          cat.name.replace(/\s+/g, ''),
-          item.name,
-          item.sub || '',
-          item.juniper ?? '',
-          item.highland ?? '',
-          item.threey ?? '',
-          item.sx ?? ''
-        ]);
-      });
-    });
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'smith_gongimbi_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('CSV 다운로드 완료');
-  });
-
-  /* ── 카테고리 추가 ── */
-  document.getElementById('add-cat-btn').addEventListener('click', () => {
-    collectData();
-    pushHistory();
-    data.categories.push({
-      id: 'cat_' + Date.now(),
-      name: '새 카테고리',
-      nameEn: 'New Category',
-      items: []
-    });
-    renderAll();
-    showToast('카테고리 추가됨');
-    setTimeout(() => {
-      document.getElementById('categories-container').lastElementChild
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  });
+  /* DOM 완전히 로드된 후 init 실행 */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 
   /* ── RENDER ── */
   function renderAll() {
