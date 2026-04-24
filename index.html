@@ -26,22 +26,16 @@
     </div>
   </header>
 
-  <!-- ── 공임비 테이블 ── -->
-  <div class="table-wrapper">
-    <table id="price-table">
-      <thead>
-        <tr class="col-header">
-          <th>구분</th>
-          <th>작업 목록</th>
-          <th>주니퍼</th>
-          <th>하이랜드</th>
-          <th>3 / Y</th>
-          <th>S / X</th>
-        </tr>
-      </thead>
-      <tbody id="table-body"></tbody>
-    </table>
-  </div>
+  <!-- ── 차종 선택 탭 ── -->
+  <section class="car-selector">
+    <button class="car-tab active" data-car="juniper">주니퍼</button>
+    <button class="car-tab" data-car="highland">하이랜드</button>
+    <button class="car-tab" data-car="threey">3 · Y</button>
+    <button class="car-tab" data-car="sx">S · X</button>
+  </section>
+
+  <!-- ── 공임비 콘텐츠 (JS 렌더링) ── -->
+  <div class="price-content" id="price-content"></div>
 
   <!-- ── 추가 서비스 ── -->
   <div class="addl-section">
