@@ -13,17 +13,17 @@ async function apiLoad() {
 
 function apiSave(data) {
   return new Promise((resolve) => {
-    try {
-      const json = encodeURIComponent(JSON.stringify(data));
-      const img = new Image();
-      // 이미지 태그는 CORS·리다이렉트 제약 없이 GET 요청을 보냄
-      // Apps Script가 doGet을 실행한 후 JSON을 반환 → 이미지 로드 실패(onerror)하지만 저장은 완료됨
-      img.onload = img.onerror = () => resolve(true);
-      img.src = `${SMITH_API}?action=save&d=${json}&t=${Date.now()}`;
-      setTimeout(() => resolve(true), 8000);
-    } catch (e) {
-      console.error('API 저장 실패:', e);
-      resolve(false);
-    }
+    const json = encodeURIComponent(JSON.stringify(data));
+    const url = SMITH_API + '?action=save&d=' + json + '&t=' + Date.now();
+
+    // 스크립트 태그 방식: CORS·리다이렉트 제약 없이 GET 전송
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload  = () => { script.remove(); resolve(true); };
+    script.onerror = () => { script.remove(); resolve(true); }; // 오류여도 요청은 전송됨
+    document.head.appendChild(script);
+
+    // 8초 타임아웃 (네트워크 응답 없어도 저장 완료로 처리)
+    setTimeout(() => resolve(true), 8000);
   });
 }
