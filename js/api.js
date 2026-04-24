@@ -13,17 +13,35 @@ async function apiLoad() {
 
 function apiSave(data) {
   return new Promise((resolve) => {
-    const json = encodeURIComponent(JSON.stringify(data));
-    const url = SMITH_API + '?action=save&d=' + json + '&t=' + Date.now();
+    const json   = JSON.stringify(data);
+    const SIZE   = 800;  // 청크당 글자 수 (URL 안전 범위)
+    const chunks = [];
+    for (let i = 0; i < json.length; i += SIZE) {
+      chunks.push(json.slice(i, i + SIZE));
+    }
 
-    // 스크립트 태그 방식: CORS·리다이렉트 제약 없이 GET 전송
-    const script = document.createElement('script');
-    script.src = url;
-    script.onload  = () => { script.remove(); resolve(true); };
-    script.onerror = () => { script.remove(); resolve(true); }; // 오류여도 요청은 전송됨
-    document.head.appendChild(script);
+    let idx = 0;
 
-    // 8초 타임아웃 (네트워크 응답 없어도 저장 완료로 처리)
-    setTimeout(() => resolve(true), 8000);
+    function sendNext() {
+      if (idx >= chunks.length) { resolve(true); return; }
+
+      const script = document.createElement('script');
+      script.src = SMITH_API
+        + '?action=save'
+        + '&chunk=' + idx
+        + '&total=' + chunks.length
+        + '&d=' + encodeURIComponent(chunks[idx])
+        + '&t=' + Date.now();
+
+      script.onload = script.onerror = () => {
+        script.remove();
+        idx++;
+        sendNext();
+      };
+      document.head.appendChild(script);
+    }
+
+    sendNext();
+    setTimeout(() => resolve(true), 30000); // 30초 타임아웃
   });
 }
