@@ -9,30 +9,13 @@
 <body>
 <div class="page">
 
-  <!-- 배경 장식 -->
-  <svg class="hex-bg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <polygon points="100,10 180,55 180,145 100,190 20,145 20,55" fill="none" stroke="#1e6b40" stroke-width="3"/>
-    <polygon points="100,30 162,65 162,135 100,170 38,135 38,65" fill="none" stroke="#1e6b40" stroke-width="1.5"/>
-    <polygon points="100,50 144,75 144,125 100,150 56,125 56,75" fill="none" stroke="#1e6b40" stroke-width="1"/>
-  </svg>
-  <svg class="hex-bg-bottom" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <polygon points="100,10 180,55 180,145 100,190 20,145 20,55" fill="none" stroke="#1e6b40" stroke-width="3"/>
-    <polygon points="100,35 158,68 158,132 100,165 42,132 42,68" fill="none" stroke="#1e6b40" stroke-width="1.5"/>
-  </svg>
-
   <!-- ── 헤더 ── -->
   <header class="header">
     <div class="header-inner">
       <div class="brand-block">
         <div class="brand-tag">Mobility Platform Company · Korea</div>
         <div class="brand-name">
-          <svg class="smith-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <polygon points="50,4 92,27.5 92,72.5 50,96 8,72.5 8,27.5" fill="none" stroke="#c9a35e" stroke-width="4"/>
-            <polygon points="50,18 79,34 79,66 50,82 21,66 21,34" fill="none" stroke="#c9a35e" stroke-width="2.5"/>
-            <line x1="50" y1="18" x2="50" y2="82" stroke="#c9a35e" stroke-width="1.5" opacity="0.6"/>
-            <line x1="21" y1="34" x2="79" y2="66" stroke="#c9a35e" stroke-width="1.5" opacity="0.6"/>
-            <line x1="79" y1="34" x2="21" y2="66" stroke="#c9a35e" stroke-width="1.5" opacity="0.6"/>
-          </svg>
+          <img src="images/logo.png" class="smith-logo-img" alt="The Smith">
           <span class="brand-title">The Smith</span>
         </div>
       </div>
@@ -46,7 +29,7 @@
 
   <!-- ── 공임비 테이블 ── -->
   <div class="table-wrapper">
-    <table>
+    <table id="price-table">
       <thead>
         <tr class="col-header">
           <th>구분</th>
@@ -57,269 +40,23 @@
           <th>S / X</th>
         </tr>
       </thead>
-      <tbody>
-
-        <!-- 도어 -->
-        <tr class="cat-header">
-          <td colspan="6">도 어 (4)<span class="cat-en">Door</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">오토 도어 핸들 <span class="sub">[무선]</span></td>
-          <td class="price-cell">30</td>
-          <td class="price-cell">30</td>
-          <td class="price-cell">30</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">도어 소프트 클로징 <span class="sub">[고스트도어]</span></td>
-          <td class="price-cell">30</td>
-          <td class="price-cell">30</td>
-          <td class="price-cell">30</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-        <tr class="item-row set-row">
-          <td></td>
-          <td class="item-name">셋트 할인 장착 <span class="sub">[무선 오토도어 + 소프트클로징]</span></td>
-          <td class="price-cell">50</td>
-          <td class="price-cell">50</td>
-          <td class="price-cell">50</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-
-        <!-- 프렁크 -->
-        <tr class="cat-header">
-          <td colspan="6">프 렁 크<span class="cat-en">Frunk</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">오토 프렁크 <span class="sub">[자동 열기 / 닫기]</span></td>
-          <td class="price-cell">15</td>
-          <td class="price-cell">15</td>
-          <td class="price-cell">15</td>
-          <td class="price-cell">15</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">프렁크 소프트 클로징 <span class="sub">[수동오픈]</span></td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-        </tr>
-
-        <!-- 스티어링 -->
-        <tr class="cat-header">
-          <td colspan="6">스 티 어 링<span class="cat-en">Steering</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">요크 핸들 장착</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">6</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">에어백 혼커버 교체 <span class="sub">[미파손 / 재사용]</span></td>
-          <td class="price-cell">4</td>
-          <td class="price-cell">4</td>
-          <td class="price-cell">4</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-
-        <!-- 기어 변속 -->
-        <tr class="cat-header">
-          <td colspan="6">기 어 변 속<span class="cat-en">Gear Shift</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">칼럼 기어</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-
-        <!-- 엠비언트 -->
-        <tr class="cat-header">
-          <td colspan="6">엠 비 언 트<span class="cat-en">Ambient</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">BSD 엠비언트 시스템 <span class="sub">[송풍구]</span></td>
-          <td class="price-cell">4</td>
-          <td class="price-cell">4</td>
-          <td class="price-cell">4</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-
-        <!-- 디스플레이 -->
-        <tr class="cat-header">
-          <td colspan="6">디 스 플 레 이<span class="cat-en">Display</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">스위블 모니터</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">리어 모니터 <span class="sub">[워크인 비노출 선매립]</span></td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">미니 속도계</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">장착형 디스플레이 <span class="sub">[선매립]</span></td>
-          <td class="price-cell">10</td>
-          <td class="price-cell">10</td>
-          <td class="price-cell">10</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-
-        <!-- 시트 -->
-        <tr class="cat-header">
-          <td colspan="6">시 트<span class="cat-en">Seat</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">무선 워크인 <span class="sub">[무선]</span></td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell">4</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">레그레스트 설치 <span class="sub">[수동식]</span></td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell">7</td>
-        </tr>
-
-        <!-- 글라스 루프 -->
-        <tr class="cat-header">
-          <td colspan="6">글 라 스 루 프<span class="cat-en">Glass Roof</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">선쉐이드 <span class="sub">[수동식]</span></td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell">5</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">선쉐이드 <span class="sub">[전동식]</span></td>
-          <td class="price-cell">15</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell empty">—</td>
-          <td class="price-cell">15</td>
-        </tr>
-
-        <!-- 블랙박스 -->
-        <tr class="cat-header">
-          <td colspan="6">블 랙 박 스<span class="cat-en">Dashcam</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">전원 모듈 설치 <span class="sub">[JB모듈]</span></td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell">5</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">전원 모듈 + 블랙박스 설치 <span class="sub">[JB모듈]</span></td>
-          <td class="price-cell">15</td>
-          <td class="price-cell">15</td>
-          <td class="price-cell">15</td>
-          <td class="price-cell empty">—</td>
-        </tr>
-
-        <!-- s3xy 버튼 -->
-        <tr class="cat-header">
-          <td colspan="6">s3xy 버 튼<span class="cat-en">s3xy Button</span></td>
-        </tr>
-        <tr class="item-row">
-          <td></td>
-          <td class="item-name">제품 설치 <span class="sub">[커맨더 / 노브 / 버튼 / 스톡 / 스트립]</span></td>
-          <td class="price-cell">3</td>
-          <td class="price-cell">3</td>
-          <td class="price-cell">3</td>
-          <td class="price-cell">3</td>
-        </tr>
-
-        <!-- 기타 -->
-        <tr class="cat-header">
-          <td colspan="6">기 타<span class="cat-en">Others</span></td>
-        </tr>
-        <tr class="consult-row">
-          <td class="label-cell">기타 제품 및 악세서리 설치</td>
-          <td colspan="5">상담 및 채팅 문의</td>
-        </tr>
-
-      </tbody>
+      <tbody id="table-body"></tbody>
     </table>
   </div>
 
   <!-- ── 추가 서비스 ── -->
   <div class="addl-section">
     <div class="addl-title">추가 서비스 항목</div>
-    <div class="addl-tags">
-      <span class="addl-tag">차량 원상복구 및 순정화</span>
-      <span class="addl-tag">테슬라 순정 부품 부분 교체</span>
-      <span class="addl-tag">테슬라 정품 소모품 장착</span>
-      <span class="addl-tag">알리익스프레스 제품 설치</span>
-      <span class="addl-tag">서드파티 제품 부분 수리 및 펌웨어 업데이트 / 리부트</span>
-      <span class="addl-tag">신제품 관련 설치 및 상담</span>
-    </div>
+    <div class="addl-tags" id="addl-tags"></div>
   </div>
 
   <!-- ── 안내 사항 ── -->
-  <div class="notes-section">
-    <div class="notes-col">
-      <div class="note-item"><span class="note-num">i.</span><span class="note-text">개인이 직접 구매한 제품을 매장에 가져오시면 설치 및 시공합니다.</span></div>
-      <div class="note-item"><span class="note-num">ii.</span><span class="note-text">기재된 금액은 제품 설치 및 장착에 대한 공임비용입니다. (제품 포함 가격 X)</span></div>
-      <div class="note-item"><span class="note-num">iii.</span><span class="note-text">제품 초기 불량 및 내구성에 대한 고장은 보증하지 않습니다.</span></div>
-      <div class="note-item"><span class="note-num">iv.</span><span class="note-text">제품 설치 시공에 대한 A/S는 6개월 보증합니다.</span></div>
-    </div>
-    <div class="notes-col">
-      <div class="note-item"><span class="note-num">v.</span><span class="note-text">순정화 및 원상복구는 상시 가능합니다. (비용 발생)</span></div>
-      <div class="note-item"><span class="note-num">vi.</span><span class="note-text">정확하고 완벽한 작업을 위해 소요 시간이 길어질 수 있습니다.</span></div>
-      <div class="note-item"><span class="note-num">vii.</span><span class="note-text">문제 및 이슈가 있는 제품들은 시공 요청이 거절될 수 있습니다.</span></div>
-    </div>
-  </div>
+  <div class="notes-section" id="notes-section"></div>
 
   <!-- ── 푸터 ── -->
   <footer class="footer">
     <div class="footer-brand">
-      <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <polygon points="50,4 92,27.5 92,72.5 50,96 8,72.5 8,27.5" fill="none" stroke="#c9a35e" stroke-width="4"/>
-        <polygon points="50,18 79,34 79,66 50,82 21,66 21,34" fill="none" stroke="#c9a35e" stroke-width="2.5"/>
-        <line x1="50" y1="18" x2="50" y2="82" stroke="#c9a35e" stroke-width="1.5" opacity="0.5"/>
-        <line x1="21" y1="34" x2="79" y2="66" stroke="#c9a35e" stroke-width="1.5" opacity="0.5"/>
-        <line x1="79" y1="34" x2="21" y2="66" stroke="#c9a35e" stroke-width="1.5" opacity="0.5"/>
-      </svg>
+      <img src="images/logo.png" class="footer-logo-img" alt="The Smith">
       <div>
         <div class="footer-brand-text">The Smith</div>
         <div class="footer-tag">Trust and Sensibility</div>
@@ -332,5 +69,7 @@
   </footer>
 
 </div>
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
