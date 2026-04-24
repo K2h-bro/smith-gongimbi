@@ -87,7 +87,7 @@ html, body {
   gap: 14px;
 }
 .smith-logo-img {
-  height: 34px;
+  height: 48px;
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
