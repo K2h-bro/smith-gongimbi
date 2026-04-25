@@ -11,10 +11,10 @@ async function apiLoad() {
   }
 }
 
-function apiSave(data) {
+function _sendChunked(action, payload) {
   return new Promise((resolve) => {
-    const json   = JSON.stringify(data);
-    const SIZE   = 800;  // 청크당 글자 수 (URL 안전 범위)
+    const json   = JSON.stringify(payload);
+    const SIZE   = 800;
     const chunks = [];
     for (let i = 0; i < json.length; i += SIZE) {
       chunks.push(json.slice(i, i + SIZE));
@@ -27,7 +27,7 @@ function apiSave(data) {
 
       const script = document.createElement('script');
       script.src = SMITH_API
-        + '?action=save'
+        + '?action=' + action
         + '&chunk=' + idx
         + '&total=' + chunks.length
         + '&d=' + encodeURIComponent(chunks[idx])
@@ -42,6 +42,15 @@ function apiSave(data) {
     }
 
     sendNext();
-    setTimeout(() => resolve(true), 30000); // 30초 타임아웃
+    setTimeout(() => resolve(true), 30000);
   });
+}
+
+function apiSave(data) {
+  return _sendChunked('save', data);
+}
+
+function apiSaveHistory(changes) {
+  if (!changes || changes.length === 0) return Promise.resolve(true);
+  return _sendChunked('history', changes);
 }

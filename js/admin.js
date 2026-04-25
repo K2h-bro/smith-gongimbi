@@ -3,6 +3,7 @@
 
   /* ── DATA (반드시 최상단에 위치) ── */
   let data = loadData();
+  let lastSavedData = null; // 마지막으로 저장된 데이터 스냅샷 (변경 감지용)
 
   /* ── 히스토리 (Ctrl+Z) ── */
   const history = [];
@@ -61,16 +62,107 @@
     updateSavedTime();
   }
 
+  /* ── DIFF (변경 내역 감지) ── */
+  const COL_LABELS = { juniper: '주니퍼', highland: '하이랜드', threey: '3/Y', sx: 'S/X' };
+
+  function diffData(oldData, newData) {
+    if (!oldData) return [];
+    const changes = [];
+    const now = new Date().toLocaleString('ko-KR');
+
+    // additionalServices 변경
+    const oldAddl = (oldData.additionalServices || []).join('\n');
+    const newAddl = (newData.additionalServices || []).join('\n');
+    if (oldAddl !== newAddl) {
+      changes.push({ time: now, type: '추가서비스 변경', target: '-', field: '-', old: oldAddl, new: newAddl });
+    }
+
+    // notes 변경
+    const oldNotes = (oldData.notes || []).join('\n');
+    const newNotes = (newData.notes || []).join('\n');
+    if (oldNotes !== newNotes) {
+      changes.push({ time: now, type: '안내사항 변경', target: '-', field: '-', old: oldNotes, new: newNotes });
+    }
+
+    // categories 변경
+    const oldCatsMap = new Map((oldData.categories || []).map(c => [c.id, c]));
+    const newCatsMap = new Map((newData.categories || []).map(c => [c.id, c]));
+
+    for (const [id, cat] of oldCatsMap) {
+      if (!newCatsMap.has(id)) {
+        changes.push({ time: now, type: '카테고리 삭제', target: cat.name.replace(/\s+/g,''), field: '-', old: cat.name.replace(/\s+/g,''), new: '-' });
+      }
+    }
+    for (const [id, cat] of newCatsMap) {
+      if (!oldCatsMap.has(id)) {
+        changes.push({ time: now, type: '카테고리 추가', target: cat.name.replace(/\s+/g,''), field: '-', old: '-', new: cat.name.replace(/\s+/g,'') });
+      }
+    }
+
+    for (const [id, newCat] of newCatsMap) {
+      const oldCat = oldCatsMap.get(id);
+      if (!oldCat) continue;
+
+      const catLabel = newCat.name.replace(/\s+/g,'');
+
+      if (oldCat.name !== newCat.name) {
+        changes.push({ time: now, type: '카테고리명 변경', target: catLabel, field: '카테고리명', old: oldCat.name.replace(/\s+/g,''), new: catLabel });
+      }
+
+      const oldItemsMap = new Map((oldCat.items || []).map(i => [i.id, i]));
+      const newItemsMap = new Map((newCat.items || []).map(i => [i.id, i]));
+
+      for (const [iid, item] of oldItemsMap) {
+        if (!newItemsMap.has(iid)) {
+          changes.push({ time: now, type: '항목 삭제', target: catLabel + ' > ' + item.name, field: '-', old: item.name, new: '-' });
+        }
+      }
+      for (const [iid, newItem] of newItemsMap) {
+        const oldItem = oldItemsMap.get(iid);
+        if (!oldItem) {
+          changes.push({ time: now, type: '항목 추가', target: catLabel + ' > ' + newItem.name, field: '-', old: '-', new: newItem.name });
+          continue;
+        }
+        if (oldItem.name !== newItem.name) {
+          changes.push({ time: now, type: '항목명 변경', target: catLabel + ' > ' + oldItem.name, field: '항목명', old: oldItem.name, new: newItem.name });
+        }
+        for (const col of ['juniper', 'highland', 'threey', 'sx']) {
+          const oldVal = oldItem[col] ?? null;
+          const newVal = newItem[col] ?? null;
+          if (oldVal !== newVal) {
+            changes.push({
+              time: now,
+              type: '금액 변경',
+              target: catLabel + ' > ' + newItem.name,
+              field: COL_LABELS[col],
+              old: oldVal !== null ? oldVal + '만원' : '-',
+              new: newVal !== null ? newVal + '만원' : '-'
+            });
+          }
+        }
+      }
+    }
+
+    return changes;
+  }
+
   /* ── SAVE ── */
   async function saveAll() {
     collectData();
     const btn = document.getElementById('save-btn');
     if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
+
+    const changes = diffData(lastSavedData, data);
+
     const ok = await apiSave(data);
     if (ok) {
+      if (changes.length > 0) {
+        await apiSaveHistory(changes);
+      }
+      lastSavedData = JSON.parse(JSON.stringify(data));
       localStorage.setItem('smith_data', JSON.stringify(data));
       stampSavedTime();
-      showToast('저장 완료 ✓');
+      showToast('저장 완료 ✓' + (changes.length > 0 ? ' (' + changes.length + '건 변경)' : ''));
     } else {
       showToast('저장 실패 — 네트워크 확인', true);
     }
@@ -105,6 +197,7 @@
           localStorage.setItem('smith_api_init', '1');
         }
       }
+      lastSavedData = JSON.parse(JSON.stringify(data)); // 변경 감지 기준점 설정
 
       renderAll();
       updateSavedTime();
