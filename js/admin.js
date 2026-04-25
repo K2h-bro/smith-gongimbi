@@ -108,6 +108,9 @@
       if (oldCat.name !== newCat.name) {
         changes.push({ time: now, type: '카테고리명 변경', target: catLabel, field: '카테고리명', old: oldCat.name.replace(/\s+/g,''), new: catLabel });
       }
+      if ((oldCat.nameEn || '') !== (newCat.nameEn || '')) {
+        changes.push({ time: now, type: '카테고리명 변경', target: catLabel, field: '영문명', old: oldCat.nameEn || '', new: newCat.nameEn || '' });
+      }
 
       const oldItemsMap = new Map((oldCat.items || []).map(i => [i.id, i]));
       const newItemsMap = new Map((newCat.items || []).map(i => [i.id, i]));
@@ -125,6 +128,11 @@
         }
         if (oldItem.name !== newItem.name) {
           changes.push({ time: now, type: '항목명 변경', target: catLabel + ' > ' + oldItem.name, field: '항목명', old: oldItem.name, new: newItem.name });
+        }
+        const oldSub = oldItem.sub || '';
+        const newSub = newItem.sub || '';
+        if (oldSub !== newSub) {
+          changes.push({ time: now, type: '부가설명 변경', target: catLabel + ' > ' + newItem.name, field: '부가설명', old: oldSub, new: newSub });
         }
         for (const col of ['juniper', 'highland', 'threey', 'sx']) {
           const oldVal = oldItem[col] ?? null;
